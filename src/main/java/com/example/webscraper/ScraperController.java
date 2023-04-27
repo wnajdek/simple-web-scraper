@@ -31,6 +31,8 @@ public class ScraperController {
 
     @GetMapping
     public News getArticleContent(@RequestParam String link, @RequestParam String source) {
-        return scraper.retrieveArticle(link, source);
+        return scraper.retrieveArticle(link, source)
+                .orElseThrow(() -> new NotFoundArticle(
+                        String.format("Not found article with link: %s and source: %s", link, source)));
     }
 }

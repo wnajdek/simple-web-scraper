@@ -1,5 +1,6 @@
 package com.example.webscraper;
 
+import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -7,10 +8,7 @@ import org.jsoup.select.Elements;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Service
 public class Scraper {
@@ -20,10 +18,8 @@ public class Scraper {
 
         List<News> news = new ArrayList<>();
         for (String link : links) {
-            News bbcArticle = getBBCArticle(link);
-            if (bbcArticle != null) {
-                news.add(bbcArticle);
-            }
+            Optional<News> possibleArticle = getBBCArticle(link);
+            possibleArticle.ifPresent(news::add);
         }
 
         return news;
@@ -51,51 +47,59 @@ public class Scraper {
 
             return links;
 
+        } catch (HttpStatusException e) {
+            throw new IncorrectLink(e.getUrl());
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new IncorrectLink(e.getMessage());
         }
     }
 
-    public News retrieveArticle(String link, String source) {
+    public Optional<News> retrieveArticle(String link, String source) {
         if ("wikipedia".equalsIgnoreCase(source)) {
             return getWikipediaArticle(link);
         } else if ("bbc".equalsIgnoreCase(source)) {
             return getBBCArticle(link);
         }
 
-        return new News("NOT_FOUND", "NOT_FOUND", "NOT_FOUND");
+        return Optional.empty();
     }
 
-    public News getBBCArticle(String link) {
+    public Optional<News> getBBCArticle(String link) {
         System.out.println("link: " + link);
         try {
             Document document = Jsoup.connect(link).get();
 
-            String heading = document.getElementById("main-heading").text();
+            Element possibleHeading = document.getElementById("main-heading");
+            if(possibleHeading == null)
+                return Optional.empty();
+            String heading = possibleHeading.text();
 
             Elements textBlocks = document.getElementsByAttributeValue("data-component", "text-block");
 
             StringBuilder sb = new StringBuilder();
             for (Element textBlock : textBlocks) {
-                sb.append(textBlock.getElementsByTag("p").get(0).text())
-                        .append("\n");
+                sb.append(textBlock.getElementsByTag("p").get(0).text()).append(" ");
             }
 
             if(sb.isEmpty())
-                return null;
+                return Optional.empty();
+            sb.deleteCharAt(sb.length() - 1); // remove space in end of content
 
-            return new News(heading, sb.toString(), link);
+            return Optional.of(new News(heading, sb.toString(), link));
 
-        } catch (IOException | NullPointerException e) {
-            return null;
+        } catch (IOException | NullPointerException | IllegalArgumentException e) {
+            return Optional.empty();
         }
     }
 
-    public News getWikipediaArticle(String link) {
+    public Optional<News> getWikipediaArticle(String link){
         try {
             Document document = Jsoup.connect(link).get();
 
-            String heading = document.getElementById("firstHeading").child(0).text();
+            Element possibleHeading = document.getElementById("firstHeading");
+            if(possibleHeading == null)
+                return Optional.empty();
+            String heading = possibleHeading.child(0).text();
 
             Elements paragraphs = document.getElementsByTag("p");
 
@@ -104,10 +108,10 @@ public class Scraper {
                 sb.append(e.text()).append("\n");
             }
 
-            return new News(heading, sb.toString(), link);
+            return Optional.of(new News(heading, sb.toString(), link));
 
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        } catch (IOException | NullPointerException | IllegalArgumentException e) {
+            return Optional.empty();
         }
     }
 }
