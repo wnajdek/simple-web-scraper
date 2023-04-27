@@ -77,12 +77,12 @@ public class Scraper {
 
             StringBuilder sb = new StringBuilder();
             for (Element textBlock : textBlocks) {
-                sb.append(textBlock.getElementsByTag("p").get(0).text())
-                        .append("\n");
+                sb.append(textBlock.getElementsByTag("p").get(0).text()).append(" ");
             }
 
             if(sb.isEmpty())
                 return null;
+            sb.deleteCharAt(sb.length() - 1); // remove space in end of content
 
             return new News(heading, sb.toString(), link);
 
