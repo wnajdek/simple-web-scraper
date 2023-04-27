@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/scraper/api")
@@ -24,12 +25,14 @@ public class ScraperController {
     }
 
     @GetMapping("/bbc/links")
-    public List<String> getBBCNewsLinks() {
+    public Set<String> getBBCNewsLinks() {
         return scraper.getLinksToArticles("https://www.bbc.com");
     }
 
     @GetMapping
     public News getArticleContent(@RequestParam String link, @RequestParam String source) {
-        return scraper.retrieveArticle(link, source);
+        return scraper.retrieveArticle(link, source)
+                .orElseThrow(() -> new NotFoundArticle(
+                        String.format("Not found article with link: %s and source: %s", link, source)));
     }
 }
