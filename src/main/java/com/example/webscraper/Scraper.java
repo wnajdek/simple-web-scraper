@@ -1,5 +1,6 @@
 package com.example.webscraper;
 
+import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -46,8 +47,10 @@ public class Scraper {
 
             return links;
 
+        } catch (HttpStatusException e) {
+            throw new IncorrectLink(e.getUrl());
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new IncorrectLink(e.getMessage());
         }
     }
 
