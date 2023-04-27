@@ -8,13 +8,15 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class Scraper {
 
     public List<News> getBBCNewsArticles(String baseUrl) {
-        List<String> links = getLinksToArticles(baseUrl);
+        var links = getLinksToArticles(baseUrl);
 
         List<News> news = new ArrayList<>();
         for (String link : links) {
@@ -27,14 +29,14 @@ public class Scraper {
         return news;
     }
 
-    public List<String> getLinksToArticles(String baseUrl) {
+    public Set<String> getLinksToArticles(String baseUrl) {
         baseUrl = baseUrl.replaceFirst("/*$", "");
         try {
             Document document = Jsoup.connect(baseUrl + "/news").get();
 
             Elements aElements = document.getElementsByTag("a");
 
-            List<String> links = new ArrayList<>();
+            Set<String> links = new HashSet<>();
             for (Element e : aElements) {
                 String link = e.attr("href");
 

@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/scraper/api")
@@ -24,7 +25,7 @@ public class ScraperController {
     }
 
     @GetMapping("/bbc/links")
-    public List<String> getBBCNewsLinks() {
+    public Set<String> getBBCNewsLinks() {
         return scraper.getLinksToArticles("https://www.bbc.com");
     }
 
