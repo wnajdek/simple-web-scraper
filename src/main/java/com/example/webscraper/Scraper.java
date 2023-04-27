@@ -81,6 +81,9 @@ public class Scraper {
                         .append("\n");
             }
 
+            if(sb.isEmpty())
+                return null;
+
             return new News(heading, sb.toString(), link);
 
         } catch (IOException | NullPointerException e) {
